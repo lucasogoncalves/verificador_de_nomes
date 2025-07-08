@@ -1,5 +1,5 @@
 {
-  "name": "pesquisa_nomes",
+  "name": "verificador_de_nomes",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
