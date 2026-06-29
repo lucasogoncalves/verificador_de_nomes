@@ -1,18 +1,60 @@
 const INPI_HOST = "busca.inpi.gov.br";
+const PLATAFORMAS = ["INPI", "Domínio", "Maps", "Instagram", "TikTok", "Facebook", "YouTube"];
+const PESQUISA_KEY = "pesquisaAtual";
+
+configurarSidePanel();
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (!message || message.type !== "VERIFY_NAME") return false;
+  if (!message) return false;
 
-  verificarNome(message.nome)
-    .then((result) => sendResponse(result))
-    .catch((error) => {
-      sendResponse({
-        ok: false,
-        message: error && error.message ? error.message : "Erro ao abrir as pesquisas."
+  if (message.type === "VERIFY_NAME") {
+    verificarNome(message.nome, sender && sender.tab ? sender.tab.id : null)
+      .then((result) => sendResponse(result))
+      .catch((error) => {
+        sendResponse({
+          ok: false,
+          message: error && error.message ? error.message : "Erro ao abrir as pesquisas."
+        });
       });
-    });
 
-  return true;
+    return true;
+  }
+
+  if (message.type === "GET_CURRENT_SEARCH") {
+    carregarPesquisaAtual()
+      .then((pesquisaAtual) => sendResponse({ ok: true, pesquisaAtual }))
+      .catch((error) => {
+        sendResponse({
+          ok: false,
+          message: error && error.message ? error.message : "Erro ao carregar pesquisa."
+        });
+      });
+
+    return true;
+  }
+
+  if (message.type === "SET_RESULT") {
+    atualizarResultado(message)
+      .then((result) => sendResponse(result))
+      .catch((error) => {
+        sendResponse({
+          ok: false,
+          message: error && error.message ? error.message : "Erro ao atualizar resultado."
+        });
+      });
+
+    return true;
+  }
+
+  return false;
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  configurarSidePanel();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  configurarSidePanel();
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -20,24 +62,27 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
   chrome.storage.local.get("nomeParaVerificar").then(({ nomeParaVerificar }) => {
     if (!nomeParaVerificar) return;
-
-    chrome.scripting.executeScript({
-      target: { tabId },
-      func: automatizarInpi,
-      args: [nomeParaVerificar]
-    }).catch((error) => {
-      console.warn("Falha ao injetar automação do INPI:", error);
-    });
+    automatizarAbaInpi(tabId, nomeParaVerificar);
   });
 });
 
-async function verificarNome(nome) {
+async function verificarNome(nome, pageTabId) {
   const nomeLimpo = String(nome || "").trim();
   if (!nomeLimpo) {
     throw new Error("Digite um nome antes de verificar.");
   }
 
-  await chrome.storage.local.set({ nomeParaVerificar: nomeLimpo });
+  const pesquisaAtual = {
+    id: `${Date.now()}`,
+    nome: nomeLimpo,
+    pageTabId,
+    resultados: Object.fromEntries(PLATAFORMAS.map((plataforma) => [plataforma, false]))
+  };
+
+  await chrome.storage.local.set({
+    [PESQUISA_KEY]: pesquisaAtual,
+    nomeParaVerificar: nomeLimpo
+  });
 
   const abas = gerarAbas(nomeLimpo);
   for (const aba of abas) {
@@ -53,6 +98,70 @@ async function verificarNome(nome) {
   };
 }
 
+async function atualizarResultado(message) {
+  const pesquisaAtual = await carregarPesquisaAtual();
+  if (!pesquisaAtual || !pesquisaAtual.nome) {
+    throw new Error("Nenhuma pesquisa ativa. Faça uma busca pela página primeiro.");
+  }
+
+  if (!PLATAFORMAS.includes(message.plataforma)) {
+    throw new Error("Plataforma inválida.");
+  }
+
+  const checked = Boolean(message.checked);
+  pesquisaAtual.resultados = pesquisaAtual.resultados || {};
+  pesquisaAtual.resultados[message.plataforma] = checked;
+
+  await chrome.storage.local.set({ [PESQUISA_KEY]: pesquisaAtual });
+  await enviarResultadoParaPagina({
+    nome: pesquisaAtual.nome,
+    plataforma: message.plataforma,
+    checked
+  });
+
+  return {
+    ok: true,
+    pesquisaAtual
+  };
+}
+
+async function carregarPesquisaAtual() {
+  const dados = await chrome.storage.local.get(PESQUISA_KEY);
+  return dados[PESQUISA_KEY] || null;
+}
+
+async function enviarResultadoParaPagina(resultado) {
+  const pesquisaAtual = await carregarPesquisaAtual();
+  if (!pesquisaAtual || !pesquisaAtual.pageTabId) return;
+
+  await chrome.tabs.sendMessage(pesquisaAtual.pageTabId, {
+    type: "RESULT_UPDATED",
+    ...resultado
+  }).catch((error) => {
+    console.warn("Não foi possível atualizar a página principal:", error);
+  });
+}
+
+function automatizarAbaInpi(tabId, nomeParaVerificar) {
+  chrome.scripting.executeScript({
+    target: { tabId },
+    func: automatizarInpi,
+    args: [nomeParaVerificar]
+  }).catch((error) => {
+    console.warn("Falha ao injetar automação do INPI:", error);
+  });
+}
+
+function configurarSidePanel() {
+  if (!chrome.sidePanel || !chrome.sidePanel.setPanelBehavior) return;
+
+  chrome.sidePanel.setPanelBehavior({
+    openPanelOnActionClick: true
+  }).catch((error) => {
+    console.warn("Não foi possível configurar o painel lateral:", error);
+  });
+}
+
 function gerarAbas(nome) {
   const slug = slugify(nome);
   const nomeEncoded = encodeURIComponent(nome);
@@ -64,7 +173,7 @@ function gerarAbas(nome) {
       active: true
     },
     {
-      plataforma: "Dominio",
+      plataforma: "Domínio",
       url: `https://www.hostinger.com.br/domain-name-results?domain=${slug}.com&from=domain-name-search`,
       active: false
     },

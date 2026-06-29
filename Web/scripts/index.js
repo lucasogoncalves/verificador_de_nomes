@@ -181,6 +181,25 @@ function limparHistorico() {
   carregarHistorico();
 }
 
+function aplicarResultadoDaExtensao(nome, plataforma, checked) {
+  const nomeLimpo = String(nome || "").trim();
+  if (!nomeLimpo || !PLATAFORMAS.includes(plataforma)) return;
+
+  const historico = lerJSON("historico", []);
+  const existe = historico.some((item) => item.toLowerCase() === nomeLimpo.toLowerCase());
+  if (!existe) {
+    historico.push(nomeLimpo);
+    salvarHistorico(historico);
+  }
+
+  const marcados = lerJSON("marcados", {});
+  marcados[`${plataforma}-${nomeLimpo}`] = Boolean(checked);
+  localStorage.setItem("marcados", JSON.stringify(marcados));
+
+  carregarHistorico();
+  mostrarFeedback(`${plataforma} atualizado no histórico.`, "success");
+}
+
 function verificar(event) {
   if (event) event.preventDefault();
 
@@ -224,6 +243,11 @@ window.addEventListener("message", (event) => {
       message.message || "Pesquisa enviada.",
       message.ok ? "success" : "error"
     );
+    return;
+  }
+
+  if (message.type === "RESULT_UPDATED") {
+    aplicarResultadoDaExtensao(message.nome, message.plataforma, message.checked);
   }
 });
 

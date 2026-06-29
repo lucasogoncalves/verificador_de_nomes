@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verificador de Nomes</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main class="popup">
+    <header>
+      <strong>Verificador de Nomes</strong>
+      <span id="nomeAtual">Nenhuma pesquisa ativa</span>
+    </header>
+
+    <p class="notice">Marca ✅ só se ninguém estiver usando. Se alguém já estiver usando deixa desmarcado.</p>
+    <section id="checks" class="checks" aria-label="Resultados da pesquisa"></section>
+    <p id="status" class="status">Abra uma pesquisa pela página principal.</p>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Verificador de Nomes - Extensão
 
-Esta extensão abre as abas de pesquisa e automatiza a navegação inicial do INPI.
+Esta extensão abre as abas de pesquisa, exibe os checks no painel lateral do navegador e automatiza a navegação inicial do INPI.
 
 ## Instalação local
 
@@ -12,3 +12,5 @@ Esta extensão abre as abas de pesquisa e automatiza a navegação inicial do IN
 6. Recarregue a página do Verificador de Nomes.
 
 Depois disso, digite um nome na página e clique em `Verificar`.
+
+Ao marcar um check no painel lateral da extensão, o histórico da página principal é atualizado no nome pesquisado. O painel permanece visível enquanto você alterna entre as abas abertas.

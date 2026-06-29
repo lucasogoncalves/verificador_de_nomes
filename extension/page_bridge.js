@@ -36,6 +36,21 @@ window.addEventListener("message", (event) => {
   });
 });
 
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (!message || message.type !== "RESULT_UPDATED") return false;
+
+  window.postMessage({
+    source: EXTENSION_SOURCE,
+    type: "RESULT_UPDATED",
+    nome: message.nome,
+    plataforma: message.plataforma,
+    checked: Boolean(message.checked)
+  }, "*");
+
+  sendResponse({ ok: true });
+  return false;
+});
+
 notifyReady();
 window.addEventListener("DOMContentLoaded", notifyReady);
 setTimeout(notifyReady, 500);
