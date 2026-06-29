@@ -2,31 +2,66 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Verificador de Nome</title>
   <script src="scripts/index.js" defer></script>
-  <script src="scripts/historico.js" defer></script>
   <link rel="stylesheet" href="style.css">
-
-
-
 </head>
 <body>
-  <div>
-    <center>
+  <main class="app">
+    <section class="intro">
       <h1>Verificador de Nome</h1>
-      <p>cheque a disponibilidade das suas idéias<br>de nome antes de passar raiva!</p>
-    </center>
-  </div>
-  
-  <input id="nomeInput" type="text" placeholder="Digite o nome" />
-  <button id="btnVerificar">Verificar</button>
+      <p>Cheque a disponibilidade das suas ideias de nome antes de passar raiva.</p>
+    </section>
 
-  <hr />
-  <h2>Histórico</h2>
-  <p>marque o que está disponível</p>
- <table id="historico" border="1" cellpadding="6"></table>
+    <section class="first-steps">
 
-  <script src="scripts/reload.js"></script>
+    <div class="install-panel" aria-labelledby="installTitle">
+      <div>
+        <h2 id="installTitle">Antes de usar</h2>
+        <p>Instale a extensão para permitir que o navegador abra as abas e automatize o INPI.</p>
+      </div>
 
+      <a class="download-button" href="dist/verificador-de-nomes-extensao.zip" download>
+        Baixar extensão
+      </a>
+
+      <ol>
+        <li>Baixe e descompacte o arquivo.</li>
+        <li>Abra <strong>chrome://extensions</strong> ou <strong>edge://extensions</strong>.</li>
+        <li>Ative o modo do desenvolvedor e clique em <strong>Carregar sem compactação</strong>.</li>
+        <li>Selecione a pasta descompactada que contém o arquivo <strong>manifest.json</strong> e recarregue esta página.</li>
+      </ol>
+
+      <p id="extensionStatus" class="extension-status">Extensão não detectada.</p>
+    </div>
+
+    <div class="search-panel" aria-labelledby="searchTitle">
+      <h2 id="searchTitle">Pesquisar nome</h2>
+
+      <form id="formVerificador" class="search-form">
+        <input id="nomeInput" type="text" placeholder="Digite o nome" autocomplete="off" />
+        <button id="btnVerificar" type="submit">Verificar</button>
+      </form>
+
+      <p id="feedback" class="feedback" data-type="info"></p>
+    </div>
+
+  </section>
+    
+    <section class="history-panel" aria-labelledby="historyTitle">
+      <div class="history-header">
+        <div>
+          <h2 id="historyTitle">Histórico</h2>
+          <p>Marque onde o nome está disponível e favorite as melhores opções.</p>
+        </div>
+        <button id="btnLimparHistorico" type="button" class="secondary-button">Limpar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table id="historico" aria-label="Histórico de pesquisas"></table>
+      </div>
+    </section>
+  </main>
 </body>
 </html>

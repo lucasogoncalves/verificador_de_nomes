@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Verificador de Nomes",
+  "version": "1.0.0",
+  "description": "Abre as pesquisas do Verificador de Nomes e automatiza a navegação do INPI.",
+  "permissions": [
+    "tabs",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://busca.inpi.gov.br/*",
+    "https://busca.inpi.gov.br/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.github.io/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "page_bridge.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_title": "Verificador de Nomes"
+  }
+}
